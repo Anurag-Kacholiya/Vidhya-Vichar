@@ -7,7 +7,7 @@ const AuthLayout = ({ children }) => {
         {/* Logo Top Left */}
         <div className="absolute top-6 left-10 flex items-center gap-2">
           <img
-            src="/logo.png" // <-- replace with your logo file
+            src="/logo.png" 
             alt="VidyaVichar Logo"
             className="w-10 h-10"
           />
@@ -23,7 +23,7 @@ const AuthLayout = ({ children }) => {
       {/* Right Section (Background Image) */}
       <div className="hidden md:flex flex-1">
         <img
-          src="/auth-bg.png" // <-- your side image
+          src="/auth-bg.png"
           alt="Background"
           className="w-full h-full object-cover"
         />
