@@ -1,7 +1,6 @@
 import { userLogin } from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import AuthLayout from "./AuthLayout";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -12,26 +11,32 @@ const SignIn = () => {
     e.preventDefault();
     try {
       const res = await userLogin(email, password);
+      console.log("Login Success:", res.data);
+
       const { token, user } = res.data;
 
+      // Store token and user info
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
+      // Navigate based on role
       if (user.role === "student") navigate("/student/dashboard");
       else navigate("/faculty/dashboard");
     } catch (err) {
+      console.error("Login Error:", err);
       alert(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <AuthLayout>
-      <h2 className="text-4xl font-bold text-gray-900 mb-8">Welcome Back</h2>
-      <form onSubmit={handleLogin} className="space-y-6">
+    <div className="flex justify-center items-center h-screen bg-base-200">
+      <form onSubmit={handleLogin} className="card bg-base-100 p-6 shadow-lg w-96 space-y-4">
+        <h2 className="text-2xl font-bold text-center">Login</h2>
+
         <input
           type="email"
-          placeholder="Email address"
-          className="w-full px-4 py-3 border rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          placeholder="Email"
+          className="input input-bordered w-full"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -40,27 +45,25 @@ const SignIn = () => {
         <input
           type="password"
           placeholder="Password"
-          className="w-full px-4 py-3 border rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="input input-bordered w-full"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
-        >
-          Sign In
+        <button type="submit" className="btn btn-primary w-full">
+          Login
         </button>
-      </form>
 
-      <p className="mt-6 text-gray-600 text-sm">
-        Don’t have an account?{" "}
-        <Link to="/signup" className="text-blue-600 hover:underline font-medium">
-          Sign Up
-        </Link>
-      </p>
-    </AuthLayout>
+        {/* Link to Sign Up */}
+        <p className="text-center">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-blue-500 hover:underline">
+            Sign Up
+          </Link>
+        </p>
+      </form>
+    </div>
   );
 };
 
