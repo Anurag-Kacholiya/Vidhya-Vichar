@@ -1,4 +1,4 @@
-// src/components/AuthLayout.jsx
+
 const AuthLayout = ({ children }) => {
   return (
     <div className="flex h-screen overflow-hidden">
