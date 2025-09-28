@@ -1,96 +1,172 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { userCreation } from "../api/axios";
+import { Container, Form, Button, Card, Alert } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faLock,
+  faEnvelope,
+  faGraduationCap,
+  faBuilding,
+} from "@fortawesome/free-solid-svg-icons";
 
 const SignUp = () => {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [role, setRole] = useState("student");
-    const [department, setStream] = useState("CSE");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
+  const [department, setDepartment] = useState("CSE");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-        if (!name || !email || !password) return alert("All fields are required");
+    if (!name || !email || !password) {
+      setError("All fields are required");
+      return;
+    }
 
-        try {
-            const response = await userCreation(name, email, password, role, department);
+    try {
+      setLoading(true);
+      const response = await userCreation(
+        name,
+        email,
+        password,
+        role,
+        department
+      );
+      console.log("Signup Success:", response.data);
 
-            console.log("Signup Success:", response.data);
-            alert("Account created successfully!");
+      // Navigate based on role
+      if (role === "student") navigate("/student/dashboard");
+      else navigate("/faculty/dashboard");
+    } catch (err) {
+      console.error("Signup Error:", err);
+      setError(
+        err.response?.data?.message || "Failed to create account"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            // Navigate based on role
-            if (role === "student") navigate("/student/dashboard");
-            else navigate("/faculty/dashboard");
-        } catch (error) {
-            console.error("Signup Error:", error);
-            alert(error.response?.data?.message || "Failed to create account");
-        }
-    };
+  return (
+    <Container className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+      <Card className="shadow-lg" style={{ maxWidth: "400px", width: "100%" }}>
+        <Card.Body className="p-5">
+          <h2 className="text-center mb-4 fw-bold text-primary">
+            VidyaVichar Sign Up
+          </h2>
 
-    return (
-        <div className="flex justify-center items-center h-screen bg-base-200">
-            <form
-                onSubmit={handleSubmit}
-                className="card bg-base-100 p-6 shadow-lg w-96 space-y-4"
+          {error && <Alert variant="danger">{error}</Alert>}
+
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faUser} />
+                </span>
+                <Form.Control
+                  type="text"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faEnvelope} />
+                </span>
+                <Form.Control
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faLock} />
+                </span>
+                <Form.Control
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faGraduationCap} />
+                </span>
+                <Form.Select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <option value="student">Student</option>
+                  <option value="faculty">Faculty</option>
+                </Form.Select>
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faBuilding} />
+                </span>
+                <Form.Select
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                >
+                  <option value="CSE">CSE</option>
+                  <option value="CSIS">CSIS</option>
+                  <option value="PDM">PDM</option>
+                </Form.Select>
+              </div>
+            </Form.Group>
+
+            <Button
+              variant="primary"
+              type="submit"
+              className="w-100 mb-3"
+              disabled={loading}
             >
-                <h2 className="text-2xl font-bold text-center">Sign Up</h2>
+              {loading ? "Creating Account..." : "Sign Up"}
+            </Button>
 
-                <input
-                    type="text"
-                    placeholder="Name"
-                    className="input input-bordered w-full"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                />
-
-                <input
-                    type="email"
-                    placeholder="Email"
-                    className="input input-bordered w-full"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-
-                <input
-                    type="password"
-                    placeholder="Password"
-                    className="input input-bordered w-full"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-
-                <select
-                    className="select select-bordered w-full"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
+            <div className="text-center">
+              <p className="mb-0">
+                Already have an account?{" "}
+                <Link
+                  to="/"
+                  className="text-primary text-decoration-none"
                 >
-                    <option value="student">Student</option>
-                    <option value="faculty">Faculty</option>
-                </select>
-
-                <select
-                    className="select select-bordered w-full"
-                    value={department}
-                    onChange={(e) => setStream(e.target.value)}
-                >
-                    <option value="CSE">CSE</option>
-                    <option value="CSIS">CSIS</option>
-                    <option value="PDM">PDM</option>
-                </select>
-
-                <button type="submit" className="btn btn-primary w-full">
-                    Sign Up
-                </button>
-            </form>
-        </div>
-    );
+                  Sign In
+                </Link>
+              </p>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+    </Container>
+  );
 };
 
 export default SignUp;

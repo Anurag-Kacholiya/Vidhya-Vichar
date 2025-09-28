@@ -6,7 +6,7 @@ export const userCreation = async (name, email, password, role, department) => {
     email,
     password,
     role,
-    department,
+    department
   });
 };
 
