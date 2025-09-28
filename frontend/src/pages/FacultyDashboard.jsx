@@ -1,123 +1,144 @@
 import { useState, useEffect } from "react";
-import {userCreation} from "../api/axios";
+import axios from "axios";
+import { Container, Row, Col, Card, Button, Modal, Form, Badge } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 const FacultyDashboard = () => {
-  const [title, setTitle] = useState("");
-  const [datetime, setDatetime] = useState("");
-  const [stream, setStream] = useState("CSE");
-  const [link, setLink] = useState("");
-  const [meetings, setMeetings] = useState([]);
-
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    // Fetch faculty meetings from backend
-    const fetchMeetings = async () => {
-      try {
-        const res = await userCreation.get("/faculty/meetings", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMeetings(res.data);
-      } catch (err) {
-        console.error("Error fetching meetings:", err);
-      }
-    };
+  const [meetings, setMeetings] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
+  useEffect(() => {
     fetchMeetings();
-  }, [token]);
+  }, []);
+
+  const fetchMeetings = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/home/meetings/fetch", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMeetings(res.data);
+    } catch (err) {
+      console.error("Failed to fetch meetings", err);
+    }
+  };
 
   const handleCreateMeeting = async () => {
-    if (!title || !datetime || !link) return alert("Please fill all fields");
-
+    if (!title.trim()) return alert("Title is required");
     try {
-      const res = await api.post(
-        "/faculty/meetings",
-        { title, datetime, stream, link },
+      const res = await axios.post(
+        "http://localhost:3000/home/meetings/create",
+        { title, description },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      alert("Meeting created successfully!");
-      setMeetings([...meetings, res.data]); // Add new meeting to list
+      setMeetings([...meetings, { ...res.data, status: "active" }]);
+      setShowModal(false);
       setTitle("");
-      setDatetime("");
-      setStream("CSE");
-      setLink("");
+      setDescription("");
     } catch (err) {
-      console.error("Error creating meeting:", err);
-      alert("Failed to create meeting");
+      console.error("Failed to create meeting", err);
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Faculty Dashboard</h1>
+    <Container className="py-4">
+      <Row className="mb-4">
+        <Col>
+          <h2>Hey Professor, {user?.name}</h2>
+          <p className="text-muted">Manage your meetings below.</p>
+        </Col>
+      </Row>
 
-      {/* Schedule a Meeting */}
-      <div className="card bg-base-100 shadow-md p-4 space-y-2">
-        <h2 className="text-xl font-semibold">Schedule Meeting</h2>
+      <Row>
+        <Col md={4}>
+          <Button
+            variant="primary"
+            className="w-100 mb-3"
+            onClick={() => setShowModal(true)}
+          >
+            Create Meeting
+          </Button>
+        </Col>
+        <Col md={4}>
+          <Button
+            variant="outline-secondary"
+            className="w-100 mb-3"
+            onClick={fetchMeetings}
+          >
+            Refresh
+          </Button>
+        </Col>
+      </Row>
 
-        <input
-          type="text"
-          placeholder="Meeting Title"
-          className="input input-bordered w-full"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <input
-          type="datetime-local"
-          className="input input-bordered w-full"
-          value={datetime}
-          onChange={(e) => setDatetime(e.target.value)}
-        />
-
-        <select
-          className="select select-bordered w-full"
-          value={stream}
-          onChange={(e) => setStream(e.target.value)}
-        >
-          <option value="CSE">CSE</option>
-          <option value="CSIS">CSIS</option>
-          <option value="PDM">PDM</option>
-        </select>
-
-        <input
-          type="text"
-          placeholder="Meeting Link"
-          className="input input-bordered w-full"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
-        />
-
-        <button className="btn btn-primary w-full" onClick={handleCreateMeeting}>
-          Create Meeting
-        </button>
-      </div>
-
-      {/* List of Meetings */}
-      <div className="card bg-base-100 shadow-md p-4">
-        <h2 className="text-xl font-semibold mb-2">Your Meetings</h2>
-        <ul className="list-disc list-inside space-y-1">
-          {meetings.length > 0 ? (
-            meetings.map((m) => (
-              <li key={m._id} className="flex justify-between items-center">
-                <span>{m.title} - {new Date(m.datetime).toLocaleString()} ({m.stream})</span>
-                <a
-                  href={m.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-sm btn-primary"
+      <Row className="g-4">
+        {meetings.length === 0 ? (
+          <p className="text-muted text-center">No meetings created yet.</p>
+        ) : (
+          meetings.map((meeting) => (
+            <Col md={4} key={meeting._id}>
+              <Card className="p-3 shadow-sm">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5>{meeting.title}</h5>
+                  <Badge bg={meeting.status === "active" ? "success" : "secondary"}>
+                    {meeting.status === "active" ? "Active" : "Ended"}
+                  </Badge>
+                </div>
+                <p className="text-muted">{meeting.description}</p>
+                <Button
+                  variant={meeting.status === "active" ? "success" : "secondary"}
+                  className="w-100 mb-2"
+                  onClick={() => navigate(`/faculty/meeting/${meeting._id}/questions`)}
                 >
-                  Join
-                </a>
-              </li>
-            ))
-          ) : (
-            <li>No meetings scheduled</li>
-          )}
-        </ul>
-      </div>
-    </div>
+                  Join as Host
+                </Button>
+              </Card>
+            </Col>
+          ))
+        )}
+      </Row>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Create a Meeting</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Meeting Title</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter meeting title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="Optional description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleCreateMeeting}>
+            Create
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 
